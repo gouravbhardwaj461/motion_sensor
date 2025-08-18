@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>MotionGuard Dashboard</title>
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 40px 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h2, h3 {
+      margin-bottom: 10px;
+    }
+    .feed {
+      border: 4px solid #00ff99;
+      width: 90%;
+      max-width: 800px;
+      margin: 20px auto;
+      border-radius: 8px;
+      box-shadow: 0 0 12px #00ff99aa;
+      background-color: #222;
+    }
+    .remote-section {
+      margin-top: 40px;
+      max-width: 400px;
+      width: 90%;
+      background: #222;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 8px #00ff99aa;
+    }
+    .remote-section img {
+      border: 2px solid #fff;
+      margin: 10px 0;
+      border-radius: 6px;
+      transition: transform 0.3s ease;
+      cursor: pointer;
+    }
+    .remote-section img:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 12px #00ff99;
+    }
+    .btn {
+      display: inline-block;
+      padding: 10px 22px;
+      margin: 15px 5px 0 5px;
+      font-size: 16px;
+      background: #0ff;
+      color: #000;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 600;
+      transition: background 0.3s ease;
+      border: none;
+      cursor: pointer;
+    }
+    .btn:hover {
+      background: #00c2c2;
+      color: #fff;
+    }
+    .stop-btn {
+      background: #f33 !important;
+      color: #fff !important;
+      margin-bottom: 30px;
+    }
+    .start-btn {
+      background: #0f0 !important;
+      color: #000 !important;
+      margin-bottom: 30px;
+    }
+    .start-btn:hover {
+      background: #0c0 !important;
+      color: #fff !important;
+    }
+    .logout {
+      position: fixed;
+      top: 20px;
+      right: 30px;
+      color: #f66;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 18px;
+      transition: color 0.3s ease;
+      z-index: 1000;
+    }
+    .logout:hover {
+      color: #ff4444;
+    }
+    footer {
+      margin-top: auto;
+      padding: 10px 0;
+      color: #555;
+      font-size: 14px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <a href="{% url 'logout' %}" class="logout" aria-label="Logout">🚪 Logout</a>
+
+  <div id="camera-controls">
+    <button id="start-btn" onclick="startCamera()" class="btn start-btn" style="display:none;" aria-pressed="false">▶️ Start Camera</button>
+    <button id="stop-btn" onclick="stopCamera()" class="btn stop-btn" aria-pressed="true">⛔ Stop Camera</button>
+    <div id="camera-status" role="status" aria-live="polite" style="margin-top:10px; font-weight:bold;">Camera is running</div>
+  </div>
+
+  <h2>📹 Live Surveillance Feed</h2>
+  <img src="{% url 'video_feed' %}" class="feed" alt="Live Camera Feed" />
+
+  <div class="remote-section" role="region" aria-labelledby="remote-title">
+    <h3 id="remote-title">📱 Connect Another Device as CCTV</h3>
+    <p>Scan the QR code below or click the button to activate your phone camera.</p>
+
+    <img
+      src="{% url 'remote_camera_qr' %}"
+      width="200"
+      height="200"
+      alt="QR Code to open remote camera"
+      title="Scan this QR code with your phone"
+      tabindex="0"
+    />
+
+    <br />
+    <a href="{% url 'phone_camera' %}" class="btn" role="button" aria-label="Open camera on another device">
+      Open Camera on Another Device
+    </a>
+  </div>
+
+  <footer>MotionGuard &copy; 2025 | Version 1.0</footer>
+
+  <script>
+    async function startCamera() {
+      let response = await fetch('/start-camera/', {
+        method: 'POST',
+        headers: {'X-CSRFToken': getCookie('csrftoken')}
+      });
+      let data = await response.json();
+      if(data.status === "started" || data.status === "already_running") {
+        updateButtons(true);
+      }
+    }
+
+    async function stopCamera() {
+      let response = await fetch('/stop-camera/', {
+        method: 'POST',
+        headers: {'X-CSRFToken': getCookie('csrftoken')}
+      });
+      let data = await response.json();
+      if(data.status === "stopped" || data.status === "already_stopped") {
+        updateButtons(false);
+      }
+    }
+
+    function updateButtons(running) {
+      const startBtn = document.getElementById('start-btn');
+      const stopBtn = document.getElementById('stop-btn');
+      const status = document.getElementById('camera-status');
+
+      startBtn.style.display = running ? 'none' : 'inline-block';
+      stopBtn.style.display = running ? 'inline-block' : 'none';
+
+      startBtn.setAttribute('aria-pressed', running ? 'false' : 'true');
+      stopBtn.setAttribute('aria-pressed', running ? 'true' : 'false');
+
+      status.textContent = running ? 'Camera is running' : 'Camera is stopped';
+    }
+
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+          cookie = cookie.trim();
+          if (cookie.startsWith(name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    async function checkCameraStatus() {
+      let response = await fetch('/camera-status/');
+      let data = await response.json();
+      updateButtons(data.running);
+    }
+
+    window.onload = checkCameraStatus;
+  </script>
+</body>
+</html>

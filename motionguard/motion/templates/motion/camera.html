@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Phone Camera Feed</title>
+  <style>
+    body {
+      background: #111;
+      color: #eee;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    video {
+      width: 100%;
+      max-width: 400px;
+      border-radius: 8px;
+      border: 2px solid #0ff;
+      box-shadow: 0 0 10px #0ffaa;
+    }
+    #status {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>📱 Phone Camera Stream</h2>
+  <video id="video" autoplay playsinline></video>
+  <div id="status">Starting camera...</div>
+
+  <script>
+    const video = document.getElementById('video');
+    const status = document.getElementById('status');
+
+    async function startPhoneCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        status.textContent = "Camera started. Sending frames...";
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        async function sendFrame() {
+          if (video.readyState < 2) { // video not ready
+            setTimeout(sendFrame, 500);
+            return;
+          }
+
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+          canvas.toBlob(async (blob) => {
+            if (!blob) return;
+
+            let formData = new FormData();
+            formData.append('frame', blob, 'frame.jpg');
+
+            try {
+              await fetch('/receive_frame/', {
+                method: 'POST',
+                headers: {
+                  'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: formData
+              });
+              status.textContent = "Frame sent at " + new Date().toLocaleTimeString();
+            } catch (error) {
+              status.textContent = "Error sending frame: " + error;
+            }
+          }, 'image/jpeg');
+
+          // Send next frame in 500ms
+          setTimeout(sendFrame, 500);
+        }
+
+        sendFrame();
+
+      } catch (err) {
+        status.textContent = 'Error accessing camera: ' + err;
+      }
+    }
+
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+          cookie = cookie.trim();
+          if (cookie.startsWith(name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    startPhoneCamera();
+  </script>
+</body>
+</html>

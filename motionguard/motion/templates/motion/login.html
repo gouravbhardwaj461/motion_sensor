@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login - Motion</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron&display=swap');
+
+    body {
+      margin: 0;
+      background-color: #0a0a0a;
+      font-family: 'Orbitron', monospace, sans-serif;
+      color: #00ff99;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .login-container {
+      background-color: #111;
+      padding: 40px 60px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px #00ff99;
+      width: 320px;
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 30px;
+      font-weight: 700;
+      font-size: 1.8rem;
+      letter-spacing: 2px;
+      color: #00ff99;
+      text-shadow: 0 0 8px #00ff99;
+    }
+
+    label {
+      display: block;
+      text-align: left;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #00ff99;
+      text-shadow: 0 0 6px #00ff99;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 24px;
+      border: 2px solid #00ff99;
+      border-radius: 8px;
+      background: #000;
+      color: #00ff99;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      border-color: #33ffbb;
+      box-shadow: 0 0 8px #33ffbb;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background-color: #00cc77;
+      border: none;
+      border-radius: 10px;
+      color: #000;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      box-shadow: 0 0 15px #00cc77;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #00ff99;
+      box-shadow: 0 0 25px #00ff99;
+    }
+
+    .footer {
+      margin-top: 20px;
+      font-size: 0.9rem;
+      color: #003311;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>Login to Motion</h2>
+    <form method="post" action="{% url 'login' %}">
+      {% csrf_token %}
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username" required autofocus />
+
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" required />
+
+      <button type="submit">Login</button>
+    </form>
+  </div>
+</body>
+</html>
