@@ -28,6 +28,11 @@ DEBUG = False
 ALLOWED_HOSTS = ['*']  # or ['your-app-name.onrender.com']
 
 
+import dj_database_url
+
+DATABASES = {
+    'default': dj_database_url.config(conn_max_age=600)
+}
 
 # Application definition
 
